@@ -505,9 +505,9 @@ function finishRace() {
   say('Финиш!', 1.5, 'cool');
   MUSIC.jingle(player.finishRank === 1 ? 'win' : 'finish');
   setTimeout(() => {
-    $('resTitle').textContent = player.finishRank === 1 ? 'Победа' : 'Финиш';
-    $('resPlace').textContent = `${player.finishRank} место из ${N_RIVALS + 1}`;
-    $('resInfo').textContent = `Время ${fmtTime(t)}` + (record ? ' — новый рекорд.' : `. Рекорд ${fmtTime(best)}.`) + ` Очки: ${score.toLocaleString('ru-RU')}${scoreRec ? ' — лучший счёт' : ''}.`;
+    $('resTitle').textContent = T(player.finishRank === 1 ? 'Победа' : 'Финиш');
+    $('resPlace').textContent = L(`${player.finishRank} место из ${N_RIVALS + 1}`, `Place ${player.finishRank} of ${N_RIVALS + 1}`, `${player.finishRank}. místo z ${N_RIVALS + 1}`);
+    $('resInfo').textContent = `${L('Время', 'Time', 'Čas')} ${fmtTime(t)}` + (record ? L(' — новый рекорд.', ' — new record.', ' — nový rekord.') : `. ${L('Рекорд', 'Record', 'Rekord')} ${fmtTime(best)}.`) + ` ${L('Очки', 'Score', 'Body')}: ${fmtNum(score)}${scoreRec ? L(' — лучший счёт', ' — best score', ' — nejlepší skóre') : ''}.`;
     $('result').hidden = false; $('bAgain').focus();
   }, 1600);
 }
@@ -528,9 +528,9 @@ function sink(kind = 'vltava') {
   MUSIC.jingle('fall');
   say(title, 1.6, kind === 'chasm' ? 'bad' : 'cool');
   setTimeout(() => {
-    $('resTitle').textContent = title;
-    $('resPlace').textContent = place;
-    $('resInfo').textContent = info;
+    $('resTitle').textContent = T(title);
+    $('resPlace').textContent = T(place);
+    $('resInfo').textContent = T(info);
     $('result').hidden = false; $('bAgain').focus();
   }, 1800);
 }
@@ -541,9 +541,9 @@ function busted() {
   comboPts = 0; comboN = 0; comboT = 0;
   say('Попался', 1.5, 'bad');
   setTimeout(() => {
-    $('resTitle').textContent = 'Попался';
-    $('resPlace').textContent = 'Полиция забрала права';
-    $('resInfo').textContent = 'Нарушения копятся выше 130 км/ч. Сбрось скорость, пока шкала не заполнилась, или уходи от погони: машину обгоняют на полном газу, мотоциклистов сбивают пинком.';
+    $('resTitle').textContent = T('Попался');
+    $('resPlace').textContent = T('Полиция забрала права');
+    $('resInfo').textContent = T('Нарушения копятся выше 130 км/ч. Сбрось скорость, пока шкала не заполнилась, или уходи от погони: машину обгоняют на полном газу, мотоциклистов сбивают пинком.');
     $('result').hidden = false; $('bAgain').focus();
   }, 1600);
 }
