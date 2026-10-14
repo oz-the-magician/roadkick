@@ -80,11 +80,11 @@ function syncPad(dt) {
     const [mode, cap] = st();
     const el = $(id);
     if (el.dataset.mode !== mode) { el.dataset.mode = mode; el.classList.remove('off', 'ready', 'live', 'boost'); el.classList.add(mode); el.setAttribute('aria-disabled', String(mode === 'off')); }
-    const c = $(capId); if (c.textContent !== cap) c.textContent = cap;
+    const c = $(capId), tc = T(cap); if (c.textContent !== tc) c.textContent = tc;
   };
   setKey('kDrone', 'kDroneCap', droneKeyState);
   setKey('kNitro', 'kNitroCap', nitroKeyState);
-  const kc = player.weapon && state === 'race' ? `${WEAPONS[player.weapon.type].name} ×${player.weapon.uses}` : 'пинок';
+  const kc = player.weapon && state === 'race' ? `${WEAPONS[player.weapon.type].name} ×${player.weapon.uses}` : T('пинок');
   const kce = $('kKickCap'); if (kce.textContent !== kc) kce.textContent = kc;
   for (const k of PADKEYS) {
     const v = !!k.f();
@@ -101,7 +101,7 @@ if (isTouch) {
 function toggleNight() {
   if (LEVEL.night) return;
   nightTarget = nightTarget ? 0 : 1;
-  $('kNightCap').textContent = nightTarget ? 'день' : 'ночь';
+  $('kNightCap').textContent = T(nightTarget ? 'день' : 'ночь');
 }
 function toggleMusic() {
   MUSIC.setOn(!MUSIC.on);
@@ -171,7 +171,7 @@ function renderLevelList() {
     b.setAttribute('role', 'option');
     b.setAttribute('aria-selected', String(i === levelIndex));
     const best = getBest(lv);
-    b.innerHTML = `<span class="num">${i + 1}</span><span>${lv.name}<small>${lv.blurb}${best ? ', рекорд ' + fmtTime(best) : ''}</small></span>`;
+    b.innerHTML = `<span class="num">${i + 1}</span><span>${T(lv.name)}<small>${T(lv.blurb)}${best ? L(', рекорд ', ', record ', ', rekord ') + fmtTime(best) : ''}</small></span>`;
     b.addEventListener('click', () => selectLevel(i, false));
     b.addEventListener('dblclick', () => startRace());
     li.append(b); ol.append(li);
@@ -180,10 +180,10 @@ function renderLevelList() {
 function selectLevel(i, focus) {
   if (i !== levelIndex) loadLevel(i);
   document.querySelectorAll('.lvl-btn').forEach((b, k) => b.setAttribute('aria-selected', String(k === i)));
-  $('lvlName').textContent = LEVEL.name;
-  $('lvlDesc').textContent = LEVEL.desc;
+  $('lvlName').textContent = T(LEVEL.name);
+  $('lvlDesc').textContent = T(LEVEL.desc);
   const best = getBest(LEVEL);
-  $('bestv').textContent = best ? `Рекорд: ${fmtTime(best)}` : 'Рекорда пока нет';
+  $('bestv').textContent = best ? `${L('Рекорд', 'Record', 'Rekord')}: ${fmtTime(best)}` : T('Рекорда пока нет');
   if (focus) $('lvl-' + LEVEL.id).focus();
 }
 function showMenu() {
@@ -203,6 +203,10 @@ $('bMenu').addEventListener('click', showMenu);
 /* ================= boot ================= */
 buildSprites();
 loadLevel(0);
+function onLangChange() {
+  if (state === 'menu') { renderLevelList(); selectLevel(levelIndex, false); }
+  $('kNightCap').textContent = T(LEVEL.night ? 'всегда' : nightTarget ? 'день' : 'ночь');
+}
 showMenu();
 requestAnimationFrame(frame);
 

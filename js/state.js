@@ -93,7 +93,7 @@ function resetRace() {
 const $ = id => document.getElementById(id);
 let msgTimer = 0;
 function say(text, dur = 1, cls = '') {
-  const m = $('msg'); m.textContent = text; m.className = 't on ' + cls; msgTimer = dur;
+  const m = $('msg'); m.textContent = T(text); m.className = 't on ' + cls; msgTimer = dur;
 }
 function fmtTime(t) {
   const m = Math.floor(t / 60), s = t - m * 60;
@@ -113,11 +113,11 @@ function updateHud() {
   cb.classList.toggle('on', live);
   if (live) {
     $('comboMul').textContent = `x${comboMul()}`;
-    $('comboTxt').textContent = `${comboLabel} · +${Math.round(comboPts)}`;
+    $('comboTxt').textContent = `${T(comboLabel)} · +${Math.round(comboPts)}`;
     $('comboBar').style.width = `${Math.round(comboT / COMBO_WINDOW * 100)}%`;
   }
   if (++hudTick % 4) return;
-  $('scorev').textContent = score.toLocaleString('ru-RU');
+  $('scorev').textContent = fmtNum(score);
   const lap = Math.min(LAPS, Math.floor(player.dist / trackLength) + 1);
   $('posv').textContent = `${player.finishRank || rank()}/${N_RIVALS + 1}`;
   $('lapv').textContent = `${lap}/${LAPS}`;
@@ -131,14 +131,14 @@ function updateHud() {
     el.firstChild.style.width = `${Math.round(fill)}%`;
     el.classList.toggle('full', fill >= 100);
   });
-  $('lvlv').textContent = LVL_TEXT[heatLevel()];
+  $('lvlv').textContent = T(LVL_TEXT[heatLevel()]);
   const cop = $('cop');
   const active = cops.filter(c => c.state === 'ride');
   if (active.length) {
     const b = bikeZ();
     const nearest = Math.min(...active.map(c => Math.abs(c.dist - b)));
     cop.hidden = false;
-    cop.textContent = nearest < SEG * 2 ? 'Дышат в спину!'
-      : CHASE_TEXT[Math.min(3, active.length)];
+    cop.textContent = T(nearest < SEG * 2 ? 'Дышат в спину!'
+      : CHASE_TEXT[Math.min(3, active.length)]);
   } else cop.hidden = true;
 }

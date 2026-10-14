@@ -178,7 +178,7 @@ function syncBubbles() {
       el = document.createElement('div'); el.className = 'bubble';
       talkLayer.append(el); bubbleEls.set(b.e, el);
     }
-    const html = `<b>${b.e.name}:</b> ${b.e.bubble.text}`;
+    const html = `<b>${T(b.e.name)}:</b> ${T(b.e.bubble.text)}`;
     if (el.innerHTML !== html) el.innerHTML = html;
     el.style.left = `${U.clamp(b.x / W * 100, 14, 86).toFixed(2)}%`;   // keep the bubble on screen near the kerbs
     el.style.top = `${U.clamp(b.y / H * 100, 12, 95).toFixed(2)}%`;

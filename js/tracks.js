@@ -351,7 +351,7 @@ function loadLevel(i) {
   nightTarget = LEVEL.night ? 1 : 0; nt = nightTarget;
   const nk = $('kNight');
   nk.classList.toggle('off', LEVEL.night);
-  $('kNightCap').textContent = LEVEL.night ? 'всегда' : 'ночь';
+  $('kNightCap').textContent = T(LEVEL.night ? 'всегда' : 'ночь');
   resetRace();
 }
 const findSegment = z => segments[Math.floor(U.wrap(z, trackLength) / SEG) % segments.length];
