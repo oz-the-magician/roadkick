@@ -44,20 +44,31 @@ function mountainGeometry() {
   addRoad(200, 200, 200, -CRV.E, -lastY() / SEG);
 }
 function mountainScenery(addSprite) {
+  let km = 0, cabinNext = 140;
   for (let i = 30; i < segments.length - 10; i++) {
     const seg = segments[i];
     const coastal = Math.floor(i / 450) % 2 === 1;
-    if (Math.abs(seg.curve) >= 3 && i % 10 === 0) {
-      addSprite(i, seg.curve > 0 ? SPR.chevR : SPR.chevL, seg.curve > 0 ? -1.15 : 1.15);
+    const sharp = Math.abs(seg.curve) >= 3, outer = seg.curve > 0 ? -1 : 1;
+    // wooden barrier along the outside of every sharp bend
+    if (sharp && i % 2 === 0) addSprite(i, SPR.railR, outer * 1.06);
+    if (sharp && i % 10 === 0) { addSprite(i, seg.curve > 0 ? SPR.chevR : SPR.chevL, outer * 1.35); continue; }
+    if (i % 100 === 50) { addSprite(i, SPR.kmPost, 1.12); km++; continue; }
+    if (i % 170 === 0) { addSprite(i, pick(SPR.boards), (R() < 0.5 ? -1 : 1) * 1.25); continue; }
+    // a log cabin with its woodpile every so often in the forest stretches
+    if (!coastal && !sharp && i >= cabinNext) {
+      const side = R() < 0.5 ? -1 : 1;
+      addSprite(i, SPR.cabin, side * 2.1);
+      addSprite(i + 2, SPR.woodpile, side * 1.45);
+      cabinNext = i + 260 + (R() * 160 | 0);
       continue;
     }
-    if (i % 170 === 0) { addSprite(i, pick(SPR.boards), (R() < 0.5 ? -1 : 1) * 1.25); continue; }
     if (R() < 0.3) {
       const side = R() < 0.5 ? -1 : 1;
-      const tree = coastal ? (R() < 0.75 ? SPR.palm : SPR.bush) : (R() < 0.8 ? SPR.pine : SPR.rock);
+      const k = R();
+      const tree = coastal ? (k < 0.75 ? SPR.palm : SPR.bush) : (k < 0.6 ? SPR.pine : k < 0.82 ? SPR.birch : k < 0.92 ? SPR.rock : SPR.stump);
       addSprite(i, tree, side * rr(1.25, 3.2));
     }
-    if (R() < 0.12) addSprite(i, R() < 0.5 ? SPR.bush : SPR.rock, (R() < 0.5 ? -1 : 1) * rr(1.1, 1.5));
+    if (R() < 0.12) addSprite(i, R() < 0.5 ? SPR.bush : (R() < 0.7 ? SPR.rock : SPR.stump), (R() < 0.5 ? -1 : 1) * rr(1.1, 1.5));
   }
 }
 function cityGeometry() {
@@ -96,6 +107,10 @@ function cityScenery(addSprite) {
     if (i % 18 === 0) { addSprite(i, SPR.lampL, -1.1); light(i); }
     if (i % 18 === 9) { addSprite(i, SPR.lampR, 1.1); light(i); }
     if (i % 120 === 60) { addSprite(i, pick(SPR.neons), (R() < 0.5 ? -1 : 1) * 1.28); continue; }
+    // crossings: a pair of blinking traffic lights
+    if (i % 150 === 30) { addSprite(i, SPR.tlightL, -1.12); addSprite(i, SPR.tlightR, 1.12); continue; }
+    if (i % 140 === 100) { const side = R() < 0.5 ? -1 : 1; addSprite(i, side < 0 ? SPR.busStop : SPR.busStopR, side * 1.22); continue; }
+    if (i % 190 === 130) { addSprite(i, pick(SPR.kiosks), (R() < 0.5 ? -1 : 1) * 1.24); continue; }
     if (Math.abs(seg.curve) >= 3 && i % 10 === 5) {
       addSprite(i, seg.curve > 0 ? SPR.chevR : SPR.chevL, seg.curve > 0 ? -1.2 : 1.2);
       continue;
@@ -127,6 +142,14 @@ function desertScenery(addSprite) {
     }
     if (i % 230 === 115) { addSprite(i, pick(SPR.boards), 1.3); continue; }
     if (i % 400 === 300) { addSprite(i, SPR.diner, 1.35); continue; }
+    // roadside stops: abandoned gas station and a motel with a dying neon
+    if (i % 520 === 200) { addSprite(i, SPR.gas, -2.0); continue; }
+    if (i % 520 === 460) { addSprite(i, SPR.motel, 1.4); continue; }
+    if (i % 260 === 70) { addSprite(i, SPR.windmill, (R() < 0.5 ? -1 : 1) * rr(2.2, 3.4)); continue; }
+    if (R() < 0.006) addSprite(i, SPR.rustCar, (R() < 0.5 ? -1 : 1) * rr(1.5, 2.6));
+    if (R() < 0.01) addSprite(i, SPR.skull, (R() < 0.5 ? -1 : 1) * rr(1.15, 1.6));
+    // every so often a tumbleweed rolls across the road
+    if (i % 90 === 45) { const sg = segments[i]; if (sg) sg.sprites.push({ spr: SPR.roller, offset: 9, roll: R() * 5 }); }
     if (R() < 0.1) addSprite(i, pick(SPR.cacti), (R() < 0.5 ? -1 : 1) * rr(1.3, 4));
     if (R() < 0.05) addSprite(i, SPR.tumble, (R() < 0.5 ? -1 : 1) * rr(1.1, 2.2));
     if (R() < 0.04) addSprite(i, SPR.redRock, (R() < 0.5 ? -1 : 1) * rr(1.3, 3.5));
@@ -166,25 +189,55 @@ function pragueScenery(addSprite) {
       sg.lamp = Math.max(sg.lamp || 0, Math.pow(1 - Math.abs(d - 0.5) / 3, 1.5));
     }
   };
+  // landmarks along the lap, by share of the track: [where, sprite, side offset, lindens/park after it]
+  const N = segments.length;
+  const marks = new Map();
+  const freeL = new Set(), freeR = new Set();   // house rows keep a gap around each landmark so it stands in the street line
+  const place = (f, spr, off) => {
+    let i = Math.floor(f * N); while (i >= bA - 4 && i < bB + 4) i++;
+    marks.set(i, [spr, off]);
+    for (let d = -22; d <= 4; d++) (off < 0 ? freeL : freeR).add(i + d);   // an open square in front, so it is seen from afar
+  };
+  place(0.06, SPR.orloj, -1.3);
+  place(0.13, SPR.tyn, 1.3);
+  place(0.47, SPR.dancing, -1.3);
+  place(0.52, SPR.theatre, 1.3);
+  place(0.60, SPR.powderTower, -1.3);
+  place(0.66, SPR.letna, 1.3);
+  place(0.74, SPR.slavia, 1.3);
+  place(0.86, SPR.letiste, 1.3);
+  place(0.89, SPR.ctower, -1.3);
+  place(0.91, SPR.terminal, 1.3);
+  const letnaPark = [Math.floor(0.66 * N), Math.floor(0.72 * N)];
+  // airport: open ground, no old-town houses
+  for (let i = Math.floor(0.85 * N); i < Math.floor(0.93 * N); i++) { freeL.add(i); freeR.add(i); }
   for (let i = 4; i < segments.length - 6; i++) {
     const seg = segments[i];
     const onBridge = i >= bA && i < bB;
-    // bridge towers at both ends
-    if (i === bA - 2 || i === bB + 1) { addSprite(i, SPR.gothic, -1.45); addSprite(i, SPR.gothic, 1.45); nextL = nextR = i + 4; continue; }
+    // Charles Bridge towers at both ends
+    if (i === bA - 2 || i === bB + 1) { addSprite(i, SPR.bridgeTower, -1.5); addSprite(i, SPR.bridgeTower, 1.5); nextL = nextR = i + 5; continue; }
+    if (marks.has(i)) {
+      const [spr, off] = marks.get(i);
+      addSprite(i, spr, off);
+      continue;
+    }
     if (onBridge) {
       if ((i - bA) % 14 === 0) { addSprite(i, SPR.statue, -1.2); addSprite(i + 7, SPR.statue, 1.2); }
       if ((i - bA) % 14 === 3) { addSprite(i, SPR.gasLampL, -1.12); addSprite(i, SPR.gasLampR, 1.12); light(i); }
       continue;
     }
-    park = Math.floor(i / 260) % 4 === 3;       // occasional park strip with lindens
-    if (i >= nextL) {
+    park = Math.floor(i / 260) % 4 === 3 || (i >= letnaPark[0] && i < letnaPark[1]);   // park strips, incl. Letná
+    if (i >= nextL && !freeL.has(i)) {
       if (park) { addSprite(i, SPR.linden, -rr(1.3, 1.6)); nextL = i + 5; }
       else { addSprite(i, pick(SPR.pHouses), -1.5); nextL = i + 6 + Math.floor(R() * 3); }
     }
-    if (i >= nextR) { addSprite(i, pick(SPR.pHouses), 1.5); nextR = i + 6 + Math.floor(R() * 3); }
+    if (i >= nextR && !freeR.has(i)) {
+      if (park && i >= letnaPark[0] && i < letnaPark[1]) { addSprite(i, SPR.linden, rr(1.3, 1.6)); nextR = i + 5; }
+      else { addSprite(i, pick(SPR.pHouses), 1.5); nextR = i + 6 + Math.floor(R() * 3); }
+    }
     if (i % 16 === 0) { addSprite(i, SPR.gasLampL, -1.12); light(i); }
     if (i % 16 === 8) { addSprite(i, SPR.gasLampR, 1.12); light(i); }
-    if (i % 150 === 75) { addSprite(i, SPR.pivo, 1.28); continue; }
+    if (i % 150 === 75 && !freeR.has(i)) { addSprite(i, SPR.pivo, 1.28); continue; }
     if (i % 330 === 200) { addSprite(i, SPR.gothic, -1.5); nextL = i + 6; continue; }
     if (Math.abs(seg.curve) >= 3 && i % 10 === 5) {
       addSprite(i, seg.curve > 0 ? SPR.chevR : SPR.chevL, seg.curve > 0 ? -1.2 : 1.2);
@@ -249,6 +302,8 @@ function extremeScenery(addSprite) {
   for (const [st, left, right] of starts) {
     if (left) addSprite(st - 16, SPR.jump, -1.3);
     if (right) addSprite(st - 16, SPR.jump, 1.3);
+    // fans cheering beside every jump
+    addSprite(st + 1, SPR.fans, -1.35); addSprite(st + 3, SPR.fans, 1.35);
     for (const d of [-12, -8, -4]) {
       addSprite(st + d, SPR.warn, left ? -1.12 : 1.12);
       if (left && right) addSprite(st + d, SPR.warn, 1.12);
@@ -262,6 +317,10 @@ function extremeScenery(addSprite) {
     if (prev && prev.gap) { addSprite(i, pick(SPR.pennants), -1.1); addSprite(i, pick(SPR.pennants), 1.1); addSprite(i + 1, SPR.tires, -1.2); addSprite(i + 1, SPR.tires, 1.2); continue; }
     if (seg.drop && !prev.drop) { addSprite(i - 6, SPR.warn, -1.12); addSprite(i - 6, SPR.warn, 1.12); }
     if (Math.abs(seg.curve) >= 3 && i % 10 === 0) { addSprite(i, seg.curve > 0 ? SPR.chevR : SPR.chevL, seg.curve > 0 ? -1.15 : 1.15); continue; }
+    // natural rock arches over the road on calm straights
+    if (i % 220 === 110 && !seg.ramp && !seg.kicker && Math.abs(seg.curve) < 2 && !segments.slice(i - 6, i + 6).some(s => s.gap || s.ramp || s.kicker)) { addSprite(i, SPR.arch, 0); continue; }
+    // stunt camp: tents and a trailer
+    if (i % 300 === 200) { const side = R() < 0.5 ? -1 : 1; addSprite(i, SPR.trailer, side * 1.7); addSprite(i + 3, pick(SPR.tents), side * 1.4); addSprite(i + 6, pick(SPR.tents), side * 1.9); continue; }
     if (i % 40 === 0) addSprite(i, pick(SPR.pennants), (i % 80 ? -1 : 1) * 1.2);
     if (R() < 0.1) addSprite(i, SPR.redRock, (R() < 0.5 ? -1 : 1) * rr(1.3, 3.2));
     if (R() < 0.04) addSprite(i, SPR.tires, (R() < 0.5 ? -1 : 1) * rr(1.15, 1.4));
