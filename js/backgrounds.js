@@ -64,9 +64,39 @@ function makeRidge(night, far) {
       g.fillStyle = night ? '#0c1612' : '#4c8a3a'; g.fillRect(x, t + 8 + ((x >> 3) % 3), 1, c.height);
     }
   }
+  // near hills: two mountain lakes in the valleys, mirroring the sky and the far peaks
+  const lakes = far ? [] : [[0.18, 70], [0.63, 90]].map(([p, w]) => [Math.round(p * iw), w]);
+  if (!far) {
+    for (const [lx, lw] of lakes) {
+      for (let x = lx - lw / 2 - 14; x < lx + lw / 2 + 14; x++) {
+        const k = Math.max(0, Math.abs(x - lx) - lw / 2) / 14;          // 0 inside the lake, 1 at the shore edge
+        const xx = U.wrap(x, iw), s = k * k * (3 - 2 * k);   // smooth shoreline
+        tops[xx] = Math.round(Math.max(tops[xx], tops[xx] * s + (base - 32) * (1 - s)));
+      }
+    }
+    for (let x = 0; x < iw; x++) {
+      const t = tops[x];
+      g.clearRect(x, 0, 1, c.height);
+      g.fillStyle = night ? '#101d18' : '#5b9a45'; g.fillRect(x, t, 1, c.height - t);
+      g.fillStyle = night ? '#0c1612' : '#4c8a3a'; g.fillRect(x, t + 8 + ((x >> 3) % 3), 1, c.height);
+    }
+    for (const [lx, lw] of lakes) {
+      for (let x = lx - lw / 2; x < lx + lw / 2; x++) {
+        const xx = U.wrap(x, iw), t = tops[xx];
+        const edge = Math.abs(x - lx) > lw / 2 - 3;
+        for (let y = t + 1; y < t + 15; y++) {
+          const shimmer = (x * 3 + y * 5) % 13 === 0;
+          g.fillStyle = night ? (shimmer ? '#3a4a78' : '#141c3a') : (shimmer ? '#e8f4ff' : y < t + 5 ? "#7ab0d8" : y < t + 10 ? "#5a90c0" : "#4a80b0");
+          if (!(edge && y > t + 12)) g.fillRect(xx, y, 1, 1);
+        }
+        g.fillStyle = night ? '#24305a' : '#a8d0ec'; g.fillRect(xx, t + 1, 1, 1);
+      }
+    }
+  }
   if (!far) {
     for (let i = 0; i < 140; i++) {
       const x = r() * iw | 0, t = tops[x], hgt = 5 + (r() * 7 | 0);
+      if (lakes.some(([lx, lw]) => Math.abs(x - lx) < lw / 2 + 2)) continue;
       g.fillStyle = night ? '#08110d' : '#2f6a33';
       for (let y = 0; y < hgt; y++) {
         const half = Math.round((y / hgt) * 2.5);
@@ -222,12 +252,25 @@ function makeHradcany(night) {
   g.fillStyle = dark; g.fillRect(255, top - 58, 7, 6); g.fillRect(257, top - 62, 3, 4);
   g.fillStyle = night ? '#ffe070' : '#d8b040'; g.fillRect(258, top - 64, 1, 2); g.fillRect(224, top - 65, 1, 2); g.fillRect(234, top - 65, 1, 2);
   for (const wx of [240, 246, 262]) { g.fillStyle = win; g.fillRect(wx, top - 26, 2, 6); }
+  // Žižkov TV tower: three slim shafts with pods, far right of the castle hill
+  { const zx = 470, zb = base + 2, zc = night ? '#5a5a6a' : '#c8ccd4', zd = night ? '#3a3a48' : '#9a9ea8';
+    for (const dx of [-3, 0, 3]) { g.fillStyle = dx ? zd : zc; g.fillRect(zx + dx, zb - 70, 2, 70); }
+    for (const [y, hw] of [[-50, 6], [-42, 5], [-30, 5]]) { g.fillStyle = zc; g.fillRect(zx - hw, zb + y, hw * 2 + 2, 4); g.fillStyle = night ? '#ffd98a' : '#7a7e88'; g.fillRect(zx - hw + 1, zb + y + 1, hw * 2, 1); }
+    g.fillStyle = zd; g.fillRect(zx, zb - 82, 2, 12);
+    g.fillStyle = '#ff3030'; g.fillRect(zx, zb - 84, 2, 2);
+    g.fillStyle = night ? '#2a2a34' : '#3a3a46'; for (const y of [-64, -56, -22]) g.fillRect(zx + 3, zb + y, 2, 3); }
+  // Letná: the giant metronome on the plinth above the river
+  { const mx = 880, mb = Math.round(base - hill(880)) - 1;
+    g.fillStyle = night ? '#4a4048' : '#a09a90'; g.fillRect(mx - 9, mb - 6, 18, 6);
+    g.strokeStyle = night ? '#d84040' : '#c82a2a'; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(mx, mb - 6); g.lineTo(mx + 12, mb - 44); g.stroke();
+    g.fillStyle = night ? '#d84040' : '#c82a2a'; g.fillRect(mx + 7, mb - 32, 4, 4); }
   // Petřín lookout tower
   const pt = Math.round(base - hill(640));
   g.fillStyle = night ? '#7a6048' : '#6a6a72';
-  for (let y = 0; y < 34; y++) { const half = Math.round(4 - y * 0.1); g.fillRect(640 - half, pt - y, 1, 1); g.fillRect(640 + half, pt - y, 1, 1); if (y % 6 === 0) g.fillRect(640 - half, pt - y, half * 2 + 1, 1); }
-  g.fillRect(638, pt - 38, 5, 4);
-  g.fillStyle = '#ff3030'; g.fillRect(640, pt - 40, 1, 1);
+  for (let y = 0; y < 48; y++) { const half = Math.round(6 - y * 0.11); g.fillRect(640 - half, pt - y, 1, 1); g.fillRect(640 + half, pt - y, 1, 1); if (y % 6 === 0) g.fillRect(640 - half, pt - y, half * 2 + 1, 1); }
+  g.fillRect(637, pt - 53, 7, 5);
+  g.fillStyle = '#ff3030'; g.fillRect(640, pt - 56, 1, 2);
   return c;
 }
 function makeOldTown(night) {
@@ -317,6 +360,20 @@ function makeCliffs(night) {
     g.fillStyle = night ? '#3a2e48' : '#d8784a'; g.fillRect(x, t, 1, 2);
     if (tops[(x + 1) % iw] > t + 2) { g.fillStyle = night ? '#140e1c' : '#6a2a18'; g.fillRect(x, t + 2, 1, 10); }
   }
+  // rope bridge strung between two cliff tops, and a waterfall spilling down a notch
+  { const bx1 = 300, bx2 = 380, t1 = tops[bx1], t2 = tops[bx2];
+    for (let x = bx1; x <= bx2; x++) {
+      const k = (x - bx1) / (bx2 - bx1), y = Math.round(t1 + (t2 - t1) * k + Math.sin(k * Math.PI) * 9);
+      g.fillStyle = night ? '#5a4a3a' : '#7a5a38'; g.fillRect(x, y, 1, 1);
+      if (x % 3 === 0) { g.fillStyle = night ? '#3a2e24' : '#5a3e24'; g.fillRect(x, y - 4, 1, 4); }
+      g.fillStyle = night ? '#4a3c2e' : '#6a4a2e'; g.fillRect(x, y - 4 - Math.round(Math.sin(k * Math.PI) * 1), 1, 1);
+    }
+    const wx = 760, wt = tops[wx];
+    for (let y = wt + 2; y < c.height; y++) for (let dx = 0; dx < 6; dx++) {
+      g.fillStyle = night ? ((y + dx) % 5 ? '#3a4a70' : '#5a6a98') : ((y * 3 + dx) % 7 ? '#8ac8e8' : '#e8f6ff');
+      g.fillRect(wx + dx, y, 1, 1);
+    }
+    g.fillStyle = night ? '#6a7aa8' : '#ffffff'; for (let dx = -3; dx < 9; dx++) if (dx % 2) g.fillRect(wx + dx, c.height - 22 + (dx & 1), 1, 1); }
   return c;
 }
 function extremeBG() {

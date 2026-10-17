@@ -391,6 +391,17 @@ function render() {
   bubblesFrame.length = 0;
 
   drawBackground(playerY);
+  // Prague: now and then a plane climbs out of Václav Havel airport across the sky
+  if (LEVEL.id === 'prague' && SPR.plane) {
+    const t = performance.now() / 1000, cyc = t % 38;
+    if (cyc < 16) {
+      const k = cyc / 16, px = Math.round(-30 + k * (W + 60)), py = Math.round(70 - k * 40);
+      ctx.globalAlpha = nt > 0.5 ? 0.85 : 1;
+      ctx.drawImage(SPR.plane, px, py);
+      if (nt > 0.4 && Math.floor(t * 2) % 2) { ctx.fillStyle = '#ff3030'; ctx.fillRect(px + 4, py + 5, 1, 1); }
+      ctx.globalAlpha = 1;
+    }
+  }
 
   let maxy = H, x = 0, dx = -(base.curve * basePct);
   const vis = weather ? U.lerp(1, weather.vis, weatherLvl) : 1;   // fog/sand cut it to 0.5 = half the horizon
@@ -411,6 +422,16 @@ function render() {
   }
 
   drawHeadlight();
+  // desert heat haze: shimmering pale strips lying on the far road in daylight
+  if (LEVEL.id === 'desert' && nt < 0.5 && maxy < H && (!weather || weatherLvl < 0.3)) {
+    const t = performance.now() / 1000, a0 = (0.5 - nt) * 0.9;
+    for (let k = 0; k < 4; k++) {
+      const y = Math.round(maxy + 2 + k * 2), wob = Math.sin(t * 3 + k * 1.7) * 6;
+      const half = 30 + k * 14 + Math.sin(t * 2.1 + k) * 6;
+      ctx.fillStyle = `rgba(200,228,248,${(a0 * (0.55 - k * 0.11)).toFixed(3)})`;
+      ctx.fillRect(Math.round(W / 2 - half + wob), y, Math.round(half * 2), 1);
+    }
+  }
 
   // bucket moving things by segment
   const bucket = new Map();
@@ -432,7 +453,12 @@ function render() {
     if (nearK > 0) for (const s of seg.sprites) {
       const scale = seg.p1.screen.scale;
       const sx = seg.p1.screen.x + scale * s.offset * ROADW * W / 2;
-      drawPair(s.spr, scale, sx, seg.p1.screen.y, s.offset < 0 ? -1 : 0, seg.clip, alpha * nearK);
+      const now = performance.now();
+      const spr = s.spr.anim ? s.spr.anim[Math.floor(now / (s.spr.animMs || 450)) % s.spr.anim.length] : s.spr;
+      // rollers drift across the road on their own; their stored offset stays off-road so they never collide
+      const off = s.roll ? -2.6 + U.wrap(now / 1000 * 0.55 + s.roll, 5.2) : s.offset;
+      const rx = s.roll ? seg.p1.screen.x + scale * off * ROADW * W / 2 : sx;
+      drawPair(spr, scale, rx, seg.p1.screen.y, s.spr.span ? -0.5 : off < 0 ? -1 : 0, seg.clip, alpha * nearK);
     }
     const list = bucket.get(seg.index);
     if (seg === pSeg) {

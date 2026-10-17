@@ -321,12 +321,13 @@ function update(dt) {
     if (player.speed > OFFROAD_LIMIT) player.speed += OFFROAD_DECEL * (Math.abs(player.x) < 1.2 ? 0.35 : 1) * dt;
     if (player.mode === 'ride' && !pSeg.water && player.air < 400) {   // on the bridge you fly over the parapet instead
       for (const s of pSeg.sprites) {
+        if (s.spr.nocol) continue;
         const sw = s.spr.d.width * s.spr.ppu / ROADW;
         const cx = s.offset + (sw / 2) * (s.offset > 0 ? 1 : -1);
         if (U.overlap(player.x, PW, cx, sw * 0.6)) {
           // a solid hit at speed is a crash; a glancing touch just bounces you back toward the road
           const deep = Math.abs(player.x - cx) < sw * 0.2;
-          if (deep && player.speed > MAXSPEED * 0.55) {
+          if (deep && !s.spr.soft && player.speed > MAXSPEED * 0.55) {
             crashPlayer();
             player.speed = Math.min(player.speed, MAXSPEED / 6);
             player.dist -= (U.wrap(bikeZ(), SEG)) + 1;
